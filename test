@@ -1,0 +1,36 @@
+import pyodbc
+import credentials
+import sys
+sys.path.append(sys.path[0]+'/../..')
+import printFunctions as pf
+
+# Establishing connection
+cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+credentials.SERVER+';DATABASE='+credentials.DATABASE+';ENCRYPT=no;UID='+credentials.USERNAME+';PWD='+ credentials.PWD)
+
+with cnxn:
+    cursor = cnxn.cursor()
+
+    # Querying the cursor connection with RECOMPILE and a state variable
+    state = 'California'
+    tsql = '''SELECT TOP 10 cities.CityID, cities.CityName, cities.LatestRecordedPopulation, sprovs.StateProvinceName
+              FROM Application.Cities cities 
+              INNER JOIN Application.StateProvinces sprovs 
+              ON cities.StateProvinceID = sprovs.StateProvinceID
+              WHERE StateProvinceName = ?
+              AND cities.LatestRecordedPopulation IS NOT NULL
+              ORDER BY cities.LatestRecordedPopulation DESC
+              OPTION (RECOMPILE);'''
+    
+    cursor.execute(tsql, state)
+    rows = cursor.fetchall()
+
+    # Print cursor row count
+    print('Cursor row count: ' + str(cursor.rowcount))
+
+    # Print metadata and rows results using the print functions
+    pf.PrintResultsInfo(cursor)  # Metadata
+    pf.PrintResults(rows)        # Rows results
+
+    input('Press Enter to continue...')
+
+cnxn.close()

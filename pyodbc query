@@ -4,6 +4,7 @@ import sys
 sys.path.append(sys.path[0]+'/../..')
 import printFunctions as pf
 
+#Example of simple query
 #Establishing connection
 cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+credentials.SERVER+';DATABASE='+credentials.DATABASE+';ENCRYPT=no;UID='+credentials.USERNAME+';PWD='+ credentials.PWD)
 with cnxn:
@@ -28,3 +29,6 @@ with cnxn:
     pf.PrintResults(rows)       #rows results
     input('Press Enter to continue...')
     cnxn.close()
+
+
+
