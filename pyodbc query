@@ -1,0 +1,30 @@
+import pyodbc
+import credentials  #the connection string values 
+import sys
+sys.path.append(sys.path[0]+'/../..')
+import printFunctions as pf
+
+#Establishing connection
+cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+credentials.SERVER+';DATABASE='+credentials.DATABASE+';ENCRYPT=no;UID='+credentials.USERNAME+';PWD='+ credentials.PWD)
+with cnxn:
+    cursor = cnxn.cursor()
+    #querying the cursor connection
+    tsql = '''SELECT TOP 10 cities.CityID, cities.CityName, cities.LatestRecordedPopulation,sprovs.StateProvinceName
+                FROM Application.Cities cities 
+                INNER JOIN Application.StateProvinces sprovs 
+                ON cities.StateProvinceID=sprovs.StateProvinceID
+                WHERE StateProvinceName = 'California'
+                AND cities.LatestRecordedPopulation IS NOT NULL
+                ORDER BY cities.LatestRecordedPopulation DESC;'''
+    cursor.execute(tsql)
+    rows = cursor.fetchall()
+
+    #note the -1 return for a SELECT (this number -1 is not to be trusted)
+        #because the cursor does'nt wait for the entire result before populating the rows
+    print('Cursor row count: ' + str(cursor.rowcount))
+
+    #fonction for result printing
+    pf.PrintResultsInfo(cursor) #metadata
+    pf.PrintResults(rows)       #rows results
+    input('Press Enter to continue...')
+    cnxn.close()

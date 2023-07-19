@@ -19,8 +19,8 @@ import pyodbc
 # server = 'myserver,port' # to specify an alternate port
 SERVER = r'W3-DEV-005\MSSQLSERVEREVAL' #r is used to pass raw string with special characters
 DATABASE = 'WideWorldImporters'
-USERNAME = 'Selfishark'
-PWD = '@Wansi2021'
+USERNAME = 'username'
+PWD = 'password'
 # ENCRYPT defaults to yes starting in ODBC Driver 18.
 # It's good to always specify ENCRYPT=yes on the client side to avoid MITM attacks.
 
@@ -41,7 +41,7 @@ input('Press Enter to continue...')
 
 connection.close()
 
-#Test the current connection to the server:
+#Test the current connection to the server (valid for all connection methods):
 SELECT sess.session_id,login_time,[host_name],[program_name],client_interface_name,login_name,dbs.[name] dbname,
 [status],open_transaction_count, conns.net_packet_size
 FROM 
@@ -58,3 +58,14 @@ except:
 	print('Connection timed out')
 finally:
 	input('Press Enter to continue...')
+	
+
+#Connection #3 using ODBC constants for advanced changes
+    #Constant values (use the browser Find function): https://github.com/Microsoft/ODBC-Specification/blob/master/Windows/inc/sqlext.h
+    #Explanation of settings: https://docs.microsoft.com/en-us/sql/odbc/reference/syntax/sqlsetconnectattr-function
+SQL_ATTR_TRACE=104 # look for the trace file (.LOG) in the %Temp% directory
+SQL_ATTR_PACKET_SIZE = 112 ## overdire the packet size if need be
+with pyodbc.connect(CONNECTION_STRING, attrs_before={SQL_ATTR_TRACE : 1, 
+						    SQL_ATTR_PACKET_SIZE : 1024 * 32}) as connection:
+	input('Press Enter to continue...')
+
