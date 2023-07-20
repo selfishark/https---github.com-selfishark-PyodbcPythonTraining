@@ -2,7 +2,6 @@ import pyodbc
 import credentials  #the connection string values 
 import printFunctions as pf
 import sys
-
 sys.path.append(sys.path[0]+'/../..')
 
 
@@ -76,3 +75,29 @@ with cnxn:
     input('Press Enter to continue...')
 
 cnxn.close()
+
+
+## query this in SQL to traceback the query that was executed
+'''
+SELECT
+execution_count
+,  [Database] = DB_NAME(qt.dbid)
+,[Parent  Query] = qt.text
+, qp.query_plan
+FROM  sys.dm_exec_query_stats er
+CROSS APPLY  sys.dm_exec_sql_text(er.sql_handle)as qt
+CROSS APPLY sys.dm_exec_query_plan(er.plan_handle)as qp
+WHERE qt.text LIKE '%--parameterized%'
+
+
+SELECT
+execution_count
+,  [Database] = DB_NAME(qt.dbid)
+,[Parent  Query] = qt.text
+, qp.query_plan
+FROM  sys.dm_exec_query_stats er
+CROSS APPLY  sys.dm_exec_sql_text(er.sql_handle)as qt
+CROSS APPLY sys.dm_exec_query_plan(er.plan_handle)as qp
+WHERE qt.text LIKE '%--parameterized with type size%'
+
+'''
