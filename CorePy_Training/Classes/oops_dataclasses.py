@@ -1,3 +1,5 @@
+import inspect
+
 class Position:
 
     def __init__(self, latitude, longitude):
@@ -51,29 +53,82 @@ class Position:
         prefix, dot, suffix = format_specifier.partition(".")  # partition the format_specifier into prefix, dot, and suffix
         if dot:
             num_decimal_places = int(suffix)  # convert the suffix to an integer
-            component_format_spec = f".{num_decimal_places}f" # convert the suffix to a format specifier, .{num_decimal_places}f
+            component_format_spec = f".{num_decimal_places}f"  # convert the suffix to a format specifier, .{num_decimal_places}f
 
         latitude = format(abs(self.latitude), component_format_spec)   # convert latitude to the assigned a format specifier, component_format_spec
         longitude = format(abs(self.longitude), component_format_spec)  # convert latitude to the assigned a format specifier, component_format_spec
         return (f"{latitude}° {self.latitude_hemisphere}, "
                 f"{longitude}° {self.longitude_hemisphere}")
 
-    def __eq__(self, other):    # __eq__ is used to compare two objects for equality; see eq = True in location_2.py
-        if isinstance(other, Position):
-            return self.latitude == other.latitude and self.longitude == other.longitude
-        return False
-
-    def __hash__(self):     # __hash__ is used to return the hash value of an object, used for dictionary keys; see __frozen__ = True in location_2.py
-        return hash((self.latitude, self.longitude))
 
 class EarthPosition(Position):
-    pass
-
-
-class MarsPosition(Position):
     pass
 
 
 def typename(obj):
     # type(obj).__name__ is used to dynamically retrieve the name of the current object (at runtime) to avoid confusion in case of inheritance
     return type(obj).__name__
+
+def auto_repr(cls):     # cls is used to avoid name clash with the 'class' keyword; which also represents the class to be decorated
+    print(f"Decorating {cls.__name__} with auto_repr")
+    members = vars(cls)  # vars (a built-in function) is a mapping dictionary object that contains all the members of the class
+    # for name, member in members.items():
+        # print(f"{name}, {member}")
+
+    if "__repr__" in members:
+        raise TypeError(f"{cls.__name__} __repr__ already defined")
+
+    if "__init__" not in members:
+        raise TypeError(f"{cls.__name__} does not override __init__")
+
+    # 'sig' will help to know that for every argument of __init__ beyond self there exist a property with the same name
+    sig = inspect.signature(cls.__init__)  # inspect allows to inspect the signature of a function; and the signature of a function is the list of parameters it takes
+    # Extract the list of parameter names in __init__ excluding the first parameter (self)
+    parameter_names = [param.name for param in sig.parameters.values()][1:]
+
+    # print(f"parameter_names: {parameter_names}")
+    # print("__init__ parameters: ", sig.parameters)
+
+    if not all(     # all (built-in property allows to below check to be done in all the parameter names)
+        # check if the parameter name is of type property, otherwise is 'None'
+        # the statement returns True if the object associated with name is a property, rather than irregular method
+        isinstance(members.get(name, None), property)
+        for name in parameter_names
+    ):
+        raise TypeError(f"Cannot apply auto_repr to {cls.__name__} because __init__ parameters must be properties")
+
+    # The synthetised_repr method is created dynamically to support the __repr__ method when creating the class
+    def synthetised_repr(self):
+        return "{typename}({args})".format(
+            typename=typename(self),
+            args=", ".join(
+                "{name}={value!r}".format(name=name, value=getattr(self, name))
+                for name in parameter_names
+            )
+        )
+
+    setattr(cls, "__repr__", synthetised_repr)  # setattr is a built-in function that allows to set an attribute of an object
+
+    return cls
+
+
+
+class dataclass:
+    def __init__(self, name, position):
+        self._name = name
+        self._position = position
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def position(self):
+        return self._position
+
+    def __str__(self):
+        return self.name
+
+
+def __repr__(self):
+    return f"{typename(self)}(name={self.name}, position={self.position})"
