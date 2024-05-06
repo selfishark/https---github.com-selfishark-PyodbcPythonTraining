@@ -60,8 +60,6 @@ class ShippingContainer:
         return ShippingContainer.HEIGHT_FT * ShippingContainer.WIDTH_FT * self.length_ft
 
 
-
-
 class RefrigeratedShippingContainer(ShippingContainer):
     # This class inherits from ShippingContainer and adds a temperature attribute
     # it uses **kwargs to avoid circular dependencies as base class should not know about their derived class
